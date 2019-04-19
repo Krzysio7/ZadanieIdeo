@@ -125,5 +125,6 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
         list = gson.fromJson(json, type);
 
         System.out.println(list);
+        System.out.println(list);
     }
 }
