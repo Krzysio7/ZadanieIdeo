@@ -4,4 +4,7 @@
     <color name="colorPrimaryDark">@android:color/black</color>
     <color name="colorAccent">#4285F4</color>
     <color name="semiTransparent">#66000000</color>
+    <color name="cast_libraries_material_featurehighlight_outer_highlight_default_color">#07599B</color>
+    <color name="backgroundColor">#802196F3</color>
+    <color name="white">#FFFFFF</color>
 </resources>

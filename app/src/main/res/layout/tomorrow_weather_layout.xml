@@ -1,6 +1,115 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+<android.support.v4.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/background"
+    android:fillViewport="true">
 
-</android.support.constraint.ConstraintLayout>
+    <android.support.constraint.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+
+        >
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintLeft_toRightOf="@+id/leftBorderGuideline"
+            app:layout_constraintTop_toTopOf="@+id/topGuideLine">
+
+            <ProgressBar
+                android:id="@+id/temperatureProgressBar2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="visible" />
+
+            <TextView
+                android:id="@+id/temperatureView2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="100sp"
+                app:layout_constraintTop_toTopOf="parent" />
+
+
+            <TextView
+                android:id="@+id/weatherDescriptionView2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/temperatureView2"
+                android:layout_alignStart="@+id/temperatureView2"
+                android:layout_alignEnd="@+id/temperatureView2"
+                android:gravity="center"
+
+                android:textSize="20sp"
+                android:textStyle="italic" />
+
+            <TextView
+                android:id="@+id/measureUnitView2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignTop="@+id/temperatureView2"
+                android:layout_toEndOf="@+id/temperatureView2"
+                android:text="@string/celciusUnitText"
+                android:textSize="50sp"
+                android:visibility="gone"
+
+                />
+
+        </RelativeLayout>
+
+        <android.support.constraint.Guideline
+            android:id="@+id/leftBorderGuideline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.05" />
+
+        <android.support.constraint.Guideline
+            android:id="@+id/rightBorderGuideline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            app:layout_constraintGuide_percent="0.955" />
+
+        <android.support.constraint.Guideline
+            android:id="@+id/topGuideLine"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintGuide_percent="0.1" />
+
+
+        <TextView
+            android:id="@+id/cityView2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="20dp"
+
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ProgressBar
+            android:id="@+id/imageViewProgress2"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:visibility="visible"
+            app:layout_constraintRight_toLeftOf="@id/rightBorderGuideline"
+            app:layout_constraintTop_toBottomOf="@+id/topGuideLine"/>
+        <ImageView
+            android:id="@+id/weatherIconView2"
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+
+
+            app:layout_constraintRight_toLeftOf="@id/rightBorderGuideline"
+            app:layout_constraintTop_toBottomOf="@+id/topGuideLine" />
+
+
+    </android.support.constraint.ConstraintLayout>
+
+</android.support.v4.widget.NestedScrollView>
+

@@ -1,6 +1,28 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">OpenDataResource</string>
     <string name="app_label">Location</string>
     <string name="search_hint">Search Location</string>
     <string name="action_search">search</string>
+    <string name="saved_high_score_key">location</string>
+    <string name="lang_key" tools:ignore="MissingTranslation">language</string>
+
+    <string name="open">Open</string>
+    <string name="close">Close</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="signUpText">Sign Up</string>
+    <string name="signInText">Sign In</string>
+    <string name="offlineModeText">You are in offline mode</string>
+    <string name="log_out">Log out</string>
+    <string name="favouritesItem">Favourites</string>
+    <string name="languageItem">Language</string>
+    <string name="FarenheitCelciusText">F/C</string>
+    <string name="temperature_unit">Temperature unit</string>
+    <string name="celciusUnitText">°C</string>
+    <string name="fahrenheitUnitText">°F</string>
+    <string name="todayFragmentText">Today</string>
+    <string name="tomorrow">Tomorrow</string>
+    <string name="emailErrorText">You must enter an valid email</string>
+    <string name="sthWrongText">Sorry,something went wrong</string>
+    <string name="emptyFIeldError">empty field</string>
 </resources>
