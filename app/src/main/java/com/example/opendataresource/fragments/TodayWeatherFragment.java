@@ -36,7 +36,7 @@ import static android.view.View.GONE;
 public class TodayWeatherFragment extends Fragment {
     public TextView temperatureTextView;
 
-    private JsonObjectRequest jsonObjectRequest;
+    public JsonObjectRequest jsonObjectRequest;
     private TextView cityTextView;
     private TextView weatherDescriptionTextView;
     private ImageView weatherIcon;

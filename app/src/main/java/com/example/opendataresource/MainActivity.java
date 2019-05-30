@@ -92,6 +92,7 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
     private String currentCity;
     private boolean first = true;
     private InternetStatusListener inter;
+    private Timer timer;
 
 
     @Override
@@ -185,6 +186,7 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
                             final String add = addresses.get(0).getLocality();
                             todayWeatherFragment.getWeather(add);
                             tomorrowWeatherFragment.getWeather(add);
+                            checkForDataUpdate();
                             currentCity = add;
                             if (!favourites.contains(add)) {
 
@@ -265,6 +267,7 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
                 String favouriteName = favourites.get(position);
                 todayWeatherFragment.getWeather(favouriteName);
                 tomorrowWeatherFragment.getWeather(favouriteName);
+                checkForDataUpdate();
                 currentCity = favouriteName;
                 addToSharedPref(favouriteName, null);
 
@@ -387,6 +390,7 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
                     favSpinnerAdapter.notifyDataSetChanged();
                 }
                 tomorrowWeatherFragment.getWeather(title);
+                checkForDataUpdate();
                 currentCity = title.toString();
                 searchView.close();
             }
@@ -459,7 +463,7 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
 
             currentCity = location.toString();
 
-            checkForDataUpdate();
+
             searchView.setText(location);
 
         }
@@ -530,15 +534,18 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
     }
 
     private void checkForDataUpdate() {
-        Timer timer = new Timer();
-        TimerTask task = new TimerTask() {
-            @Override
-            public void run() {
-                todayWeatherFragment.getWeather(currentCity);
-                tomorrowWeatherFragment.getWeather(currentCity);
-            }
-        };
-        timer.schedule(task, 0, 60000);
+        if (timer != null) {
+            timer = new Timer();
+            TimerTask task = new TimerTask() {
+                @Override
+                public void run() {
+                    MySingleton.getInstance(getApplicationContext()).addToRequestQueue(todayWeatherFragment.jsonObjectRequest);
+                    MySingleton.getInstance(getApplicationContext()).addToRequestQueue(tomorrowWeatherFragment.jsonObjectRequest);
+                }
+            };
+            timer.schedule(task, 0, 60000);
+
+        }
     }
 
 }

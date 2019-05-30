@@ -110,23 +110,28 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 break;
 
             case SIGN_IN:
-                view.setClickable(false);
-                mAuth.signInWithEmailAndPassword(usernameText, passwordText).addOnSuccessListener(new OnSuccessListener<AuthResult>() {
-                    @Override
-                    public void onSuccess(AuthResult authResult) {
-                        FirebaseUser user = mAuth.getCurrentUser();
-                        updateUI(user);
-                    }
-                }).addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        view.setClickable(true);
-                        Toast.makeText(LoginActivity.this, R.string.sthWrongText, Toast.LENGTH_SHORT).show();
+                if (usernameText.isEmpty()) {
+                    username.setError(getString(R.string.emptyFIeldError));
+                } else if (passwordText.isEmpty()) {
+                    password.setError(getString(R.string.emptyFIeldError));
+                } else if (isValidEmailId(usernameText.trim())) {
+                    view.setClickable(false);
+                    mAuth.signInWithEmailAndPassword(usernameText, passwordText).addOnSuccessListener(new OnSuccessListener<AuthResult>() {
+                        @Override
+                        public void onSuccess(AuthResult authResult) {
+                            FirebaseUser user = mAuth.getCurrentUser();
+                            updateUI(user);
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            view.setClickable(true);
+                            Toast.makeText(LoginActivity.this, R.string.sthWrongText, Toast.LENGTH_SHORT).show();
 
-                    }
-                });
+                        }
+                    });
 
-
+                }
                 break;
         }
 
