@@ -6,7 +6,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,21 +14,16 @@ import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.TextView;
 
-import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.opendataresource.BuildConfig;
-import com.example.opendataresource.MySingleton;
 import com.example.opendataresource.R;
-import com.google.firebase.firestore.FirebaseFirestore;
+import com.example.opendataresource.model.Weather;
+import com.example.opendataresource.rest.APIClient;
+import com.example.opendataresource.rest.GetTodayWeatherEndPoint;
 import com.squareup.picasso.Picasso;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.util.Timer;
-import java.util.TimerTask;
+import retrofit2.Call;
+import retrofit2.Callback;
 
 import static android.view.View.GONE;
 
@@ -103,54 +97,37 @@ public class TodayWeatherFragment extends Fragment {
         }
 
 
-        if (jsonObjectRequest != null) {
-            jsonObjectRequest.cancel();
-        }
-        String url = "http://api.openweathermap.org/data/2.5/weather?q=" + title + "&units=" + this.unit + "&APPID="+ apiKey;
-        jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null,
-                new Response.Listener<JSONObject>() {
-                    @Override
-                    public void onResponse(JSONObject response) {
+        GetTodayWeatherEndPoint api = APIClient.getClient().create(GetTodayWeatherEndPoint.class);
 
-                        try {
-                            JSONObject obj = response.getJSONObject("main");
-                            String city = response.getString("name");
-                            JSONObject weatherObject = response.getJSONArray("weather").getJSONObject(0);
-                            String weatherDescription = weatherObject.getString("description");
-                            String temp = Integer.toString((int) Math.round(obj.getDouble("temp")));
-                            String iconId = weatherObject.getString("icon");
-
-                            tempProgressBar.setVisibility(GONE);
-                            imgViewProgress.setVisibility(GONE);
-                            temperatureTextView.setVisibility(View.VISIBLE);
-                            tempUnitView.setVisibility(View.VISIBLE);
-                            temperatureTextView.setText(temp);
-                            cityTextView.setText(city);
-                            weatherIcon.setVisibility(View.VISIBLE);
-                            weatherDescriptionTextView.setText(weatherDescription);
-                            Picasso.get().load("http://openweathermap.org/img/w/" + iconId + ".png").into(weatherIcon);
-
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-
-                    }
-
-                }, new Response.ErrorListener() {
+        Call<Weather> call = api.getWeather(title.toString(), unit, apiKey);
+        call.enqueue(new Callback<Weather>() {
             @Override
-            public void onErrorResponse(VolleyError error) {
+            public void onResponse(Call<Weather> call, retrofit2.Response<Weather> response) {
+                String temp = Integer.toString((int) Math.round(response.body().getMain().getTemp()));
+                String city = response.body().getCity();
+                String weatherDescription = response.body().getWeatherInfo().get(0).getDescription();
+                String iconId = response.body().getWeatherInfo().get(0).getIconId();
+
+                tempProgressBar.setVisibility(GONE);
+                imgViewProgress.setVisibility(GONE);
+                temperatureTextView.setVisibility(View.VISIBLE);
+                tempUnitView.setVisibility(View.VISIBLE);
+                temperatureTextView.setText(temp);
+                cityTextView.setText(city);
+                weatherIcon.setVisibility(View.VISIBLE);
+                weatherDescriptionTextView.setText(weatherDescription);
+                Picasso.get().load("http://openweathermap.org/img/w/" + iconId + ".png").into(weatherIcon);
+            }
+
+            @Override
+            public void onFailure(Call<Weather> call, Throwable t) {
                 tempProgressBar.setVisibility(View.VISIBLE);
                 imgViewProgress.setVisibility(View.VISIBLE);
                 temperatureTextView.setVisibility(GONE);
                 tempUnitView.setVisibility(GONE);
                 weatherIcon.setVisibility(GONE);
-
-                error.printStackTrace();
             }
         });
-
-// Add the request to the RequestQueue.
-        MySingleton.getInstance(getContext()).addToRequestQueue(jsonObjectRequest);
     }
 
     public void onClickRadio(View view) {

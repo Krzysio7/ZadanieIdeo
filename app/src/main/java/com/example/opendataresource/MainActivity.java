@@ -125,7 +125,6 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
         offlineTextView = findViewById(R.id.offlineView);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
         searchView = findViewById(R.id.search);
-        searchView = findViewById(R.id.search);
         searchView.setLogoIcon(R.drawable.ic_my_location_black_24dp);
         drawerLayoutInit();
         navViewInit(language);
@@ -472,7 +471,7 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
 
     private CharSequence getSharedPref(String key) {
         SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
-        return sharedPref.getString(getString(R.string.saved_high_score_key), null);
+        return sharedPref.getString(key, null);
     }
 
 
@@ -539,8 +538,8 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
             TimerTask task = new TimerTask() {
                 @Override
                 public void run() {
-                    MySingleton.getInstance(getApplicationContext()).addToRequestQueue(todayWeatherFragment.jsonObjectRequest);
-                    MySingleton.getInstance(getApplicationContext()).addToRequestQueue(tomorrowWeatherFragment.jsonObjectRequest);
+                    todayWeatherFragment.getWeather(getSharedPref(getString(R.string.saved_high_score_key)));
+                    tomorrowWeatherFragment.getWeather(getSharedPref(getString(R.string.saved_high_score_key)));
                 }
             };
             timer.schedule(task, 0, 60000);
