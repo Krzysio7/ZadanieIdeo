@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item android:id="@+id/language"
+        android:icon="@drawable/ic_language_black_24dp"
+        android:title="@string/languageItem"
+        app:actionLayout="@layout/spinner"/>
+    <item android:id="@+id/favourites"
+        android:icon="@drawable/ic_favorite_black_24dp"
+        android:title="@string/favouritesItem"
+        app:actionLayout="@layout/spinner"/>
+
+    <item android:title="@string/temperature_unit">
+        <menu>
+            <item android:enabled="false"
+
+                app:actionLayout="@layout/layout_radio"
+                android:id="@+id/nav_radios"
+                android:title=""
+                />
+
+        </menu>
+    </item>
+    <item android:id="@+id/logOutItem"
+        android:icon="@drawable/ic_exit_to_app_black_24dp"
+        android:title="@string/log_out"/>
+</menu>

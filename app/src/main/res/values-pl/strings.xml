@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">OpenDataResource</string>
+    <string name="app_label">Lokacja</string>
+    <string name="search_hint">Szukana Lokacja</string>
+    <string name="action_search">szukaj</string>
+    <string name="saved_high_score_key">lokacja</string>
+    <string name="open">Otwórz</string>
+    <string name="close">Zamknij</string>
+    <string name="username">Użytkownik</string>
+    <string name="password">Hasło</string>
+    <string name="signUpText">Zarejestruj</string>
+    <string name="signInText">Zaloguj się</string>
+    <string name="offlineModeText">Jesteś w trybie offline</string>
+    <string name="log_out">Wyloguj się</string>
+    <string name="favouritesItem">Ulubione</string>
+    <string name="languageItem">Język</string>
+    <string name="FarenheitCelciusText">F/C</string>
+    <string name="temperature_unit">Jednostka temperatury</string>
+    <string name="celciusUnitText">°C</string>
+    <string name="fahrenheitUnitText">°F</string>
+    <string name="todayFragmentText">Dzisaj</string>
+    <string name="tomorrow">Jutro</string>
+    <string name="emailErrorText">Musisz podać właściwy email</string>
+    <string name="sthWrongText">Coś poszło nie tak</string>
+    <string name="emptyFIeldError">puste pole</string>
+</resources>
