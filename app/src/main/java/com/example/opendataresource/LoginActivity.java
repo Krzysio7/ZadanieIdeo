@@ -1,19 +1,15 @@
 package com.example.opendataresource;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,36 +24,54 @@ import com.google.firebase.auth.FirebaseUser;
 
 import java.util.regex.Pattern;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener, InternetStatusListener.OnlineOrOffline {
 
-    private static final String TAG = "LoginActivity";
-    private FirebaseAuth mAuth;
-    private EditText username;
-    private EditText password;
+
+    @BindView(R.id.tvOfflineMode)
+    TextView offlineTextView;
+    @BindView(R.id.etUsername)
+    EditText username;
+    @BindView(R.id.etPassword)
+    EditText password;
+    @BindView(R.id.btLoginOrSignUp)
+    Button signUpSignInButton;
+    @BindView(R.id.tvLoginOrSignUp)
+    TextView signUpSignInText;
+
+
+
+    private FirebaseAuth firebaseAuth;
     LoginOrSignUp currentText = LoginOrSignUp.SIGN_IN;
-    private Button signUpSignInButton;
-    private TextView signUpSignInText;
-    private TextView offlineTextView;
-    private IntentFilter filter;
-    private InternetStatusListener inter;
+    private IntentFilter intentFilter;
+    private InternetStatusListener internetStatusListener;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        inter = new InternetStatusListener();
-        filter = new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE");
-        registerReceiver(inter, filter);
-        offlineTextView = findViewById(R.id.offlineView);
-        username = findViewById(R.id.username);
-        password = findViewById(R.id.password);
-        signUpSignInButton = findViewById(R.id.loginButton);
-        signUpSignInText = findViewById(R.id.loginOrSignUpText);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         final ActionBar actionBar = getSupportActionBar();
+
+        internetStatusListener = new InternetStatusListener();
+        intentFilter = new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE");
+
+        registerReceiver(internetStatusListener, intentFilter);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
+
         actionBar.setDisplayShowTitleEnabled(false);
-        mAuth = FirebaseAuth.getInstance();
+
+
+        firebaseAuth = FirebaseAuth.getInstance();
+
+        ButterKnife.bind(this);
+
         signUpSignInText.setOnClickListener(this);
 
     }
@@ -66,12 +80,13 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     @Override
     protected void onStart() {
         super.onStart();
-        FirebaseUser currentUser = mAuth.getCurrentUser();
+        FirebaseUser currentUser = firebaseAuth.getCurrentUser();
         if (currentUser != null) {
             updateUI(currentUser);
         }
     }
 
+    @OnClick(R.id.btLoginOrSignUp)
     public void loginOrSignUpClicked(final View view) {
         String usernameText = username.getText().toString();
         String passwordText = password.getText().toString();
@@ -80,30 +95,23 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             case SIGN_UP:
 
                 if (usernameText.isEmpty()) {
-                    username.setError(getString(R.string.emptyFIeldError));
+                    username.setError(getString(R.string.emptyFieldError));
                 } else if (passwordText.isEmpty()) {
-                    password.setError(getString(R.string.emptyFIeldError));
+                    password.setError(getString(R.string.emptyFieldError));
                 } else if (isValidEmailId(usernameText.trim())) {
                     view.setClickable(false);
-                    mAuth.createUserWithEmailAndPassword(usernameText, passwordText)
-                            .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                                @Override
-                                public void onComplete(@NonNull Task<AuthResult> task) {
-                                    if (task.isSuccessful()) {
-                                        // Sign in success, update UI with the signed-in user's information
-                                        Log.d(TAG, "createUserWithEmail:success");
-                                        FirebaseUser user = mAuth.getCurrentUser();
-                                        updateUI(user);
-                                    } else {
-                                        view.setClickable(true);
-                                        // If sign in fails, display a message to the user.
-                                        Log.w(TAG, "createUserWithEmail:failure", task.getException());
-                                        Toast.makeText(LoginActivity.this, "Authentication failed.",
-                                                Toast.LENGTH_SHORT).show();
-//                                updateUI(null);
-                                    }
+                    firebaseAuth.createUserWithEmailAndPassword(usernameText, passwordText)
+                            .addOnCompleteListener(this, task -> {
+                                if (task.isSuccessful()) {
 
-                                    // ...
+                                    FirebaseUser user = firebaseAuth.getCurrentUser();
+                                    updateUI(user);
+
+                                } else {
+                                    view.setClickable(true);
+
+                                    Toast.makeText(LoginActivity.this, "Authentication failed.",
+                                            Toast.LENGTH_SHORT).show();
                                 }
                             });
                 }
@@ -111,17 +119,21 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
             case SIGN_IN:
                 if (usernameText.isEmpty()) {
-                    username.setError(getString(R.string.emptyFIeldError));
+                    username.setError(getString(R.string.emptyFieldError));
                 } else if (passwordText.isEmpty()) {
-                    password.setError(getString(R.string.emptyFIeldError));
+                    password.setError(getString(R.string.emptyFieldError));
                 } else if (isValidEmailId(usernameText.trim())) {
                     view.setClickable(false);
-                    mAuth.signInWithEmailAndPassword(usernameText, passwordText).addOnSuccessListener(new OnSuccessListener<AuthResult>() {
+                    firebaseAuth.signInWithEmailAndPassword(usernameText, passwordText).addOnSuccessListener(new OnSuccessListener<AuthResult>() {
+
+
                         @Override
                         public void onSuccess(AuthResult authResult) {
-                            FirebaseUser user = mAuth.getCurrentUser();
+                            FirebaseUser user = firebaseAuth.getCurrentUser();
                             updateUI(user);
                         }
+
+
                     }).addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
@@ -142,7 +154,10 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
         Intent intent = new Intent(LoginActivity.this, MainActivity.class);
         intent.putExtra("User", user);
-        unregisterReceiver(inter);
+
+        unregisterReceiver(internetStatusListener);
+
+
         startActivity(intent);
         LoginActivity.this.finish();
 
@@ -168,7 +183,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
     @Override
     public void onClick(View v) {
-        if (v.getId() == R.id.loginOrSignUpText) {
+        if (v.getId() == R.id.tvLoginOrSignUp) {
             if (currentText == LoginOrSignUp.SIGN_IN) {
                 signUpSignInText.setText(R.string.signInText);
                 signUpSignInButton.setText(R.string.signUpText);
@@ -187,11 +202,13 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         offlineTextView.setVisibility(View.GONE);
     }
 
+
     @Override
     public void onOffline() {
         offlineTextView.setVisibility(View.VISIBLE);
 
     }
+
 
 
     public enum LoginOrSignUp {

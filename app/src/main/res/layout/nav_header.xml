@@ -12,10 +12,10 @@
         android:layout_gravity="start"
         android:layout_marginTop="15dp"
         android:layout_marginBottom="15dp"
-        android:background="@drawable/ic_account_circle_black_24dp" />
+        android:background="@drawable/ic_profile" />
 
     <TextView
-        android:id="@+id/userNameDrawer"
+        android:id="@+id/tvHeaderUsername"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center"

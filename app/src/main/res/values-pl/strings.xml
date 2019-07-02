@@ -22,5 +22,5 @@
     <string name="tomorrow">Jutro</string>
     <string name="emailErrorText">Musisz podać właściwy email</string>
     <string name="sthWrongText">Coś poszło nie tak</string>
-    <string name="emptyFIeldError">puste pole</string>
+    <string name="emptyFieldError">puste pole</string>
 </resources>

@@ -14,41 +14,52 @@ import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.TextView;
 
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.opendataresource.BuildConfig;
 import com.example.opendataresource.R;
 import com.example.opendataresource.model.Weather;
 import com.example.opendataresource.rest.APIClient;
-import com.example.opendataresource.rest.GetTodayWeatherEndPoint;
+import com.example.opendataresource.rest.GetWeatherEndPoint;
 import com.squareup.picasso.Picasso;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import retrofit2.Call;
 import retrofit2.Callback;
 
 import static android.view.View.GONE;
 
 public class TodayWeatherFragment extends Fragment {
-    public TextView temperatureTextView;
 
-    public JsonObjectRequest jsonObjectRequest;
-    private TextView cityTextView;
-    private TextView weatherDescriptionTextView;
-    private ImageView weatherIcon;
-    private ProgressBar tempProgressBar;
-    private TextView tempUnitView;
+    @BindView(R.id.tvTemperature)
+    TextView temperatureTextView;
+    @BindView(R.id.tvCity)
+    TextView cityTextView;
+    @BindView(R.id.tvWeatherDesc)
+    TextView weatherDescriptionTextView;
+    @BindView(R.id.ivWeatherStatusIcon)
+    ImageView weatherIcon;
+    @BindView(R.id.pbTemperature)
+    ProgressBar tempProgressBar;
+    @BindView(R.id.tvMeasureUnit)
+    TextView tempUnitView;
+    @BindView(R.id.pbWeatherStatusIcon)
+    ProgressBar imgViewProgress;
+
+
     public String unit;
     private CharSequence location;
-    private TextView unitText;
+
     String apiKey = BuildConfig.ApiKey;
-    private View imgViewProgress;
+
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        super.onCreateView(inflater, container, savedInstanceState);
 
+        View view = inflater.inflate(R.layout.weather_layout, container, false);
+        ButterKnife.bind(this, view);
 
-        return inflater.inflate(R.layout.today_weather_layout, container, false);
+        return view;
 
 
     }
@@ -59,14 +70,14 @@ public class TodayWeatherFragment extends Fragment {
         mListener.onComplete();
 
 
-        unitText = getActivity().findViewById(R.id.measureUnitView);
-        temperatureTextView = getActivity().findViewById(R.id.temperatureView);
-        cityTextView = getActivity().findViewById(R.id.cityView);
-        weatherDescriptionTextView = getActivity().findViewById(R.id.weatherDescriptionView);
-        weatherIcon = getActivity().findViewById(R.id.weatherIconView);
-        tempProgressBar = getActivity().findViewById(R.id.temperatureProgressBar);
-        tempUnitView = getActivity().findViewById(R.id.measureUnitView);
-        imgViewProgress = getActivity().findViewById(R.id.imageViewProgress);
+        temperatureTextView = getActivity().findViewById(R.id.tvTemperature);
+        cityTextView = getActivity().findViewById(R.id.tvCity);
+        weatherDescriptionTextView = getActivity().findViewById(R.id.tvWeatherDesc);
+        weatherIcon = getActivity().findViewById(R.id.ivWeatherStatusIcon);
+        tempProgressBar = getActivity().findViewById(R.id.pbTemperature);
+        tempUnitView = getActivity().findViewById(R.id.tvMeasureUnit);
+        imgViewProgress = getActivity().findViewById(R.id.pbWeatherStatusIcon);
+
     }
 
 
@@ -81,7 +92,6 @@ public class TodayWeatherFragment extends Fragment {
         super.onAttach(context);
         this.mListener = (OnCompleteListener) context;
 
-
     }
 
 
@@ -89,24 +99,31 @@ public class TodayWeatherFragment extends Fragment {
         if (this.unit == null) {
             this.unit = "metric";
         }
-        if(title!=null) {
+        if (title != null) {
+
             SharedPreferences sharedPref = getActivity().getPreferences(Context.MODE_PRIVATE);
             SharedPreferences.Editor editor = sharedPref.edit();
             editor.putString(getString(R.string.saved_high_score_key), title.toString());
             editor.apply();
+
         }
 
 
-        GetTodayWeatherEndPoint api = APIClient.getClient().create(GetTodayWeatherEndPoint.class);
+        GetWeatherEndPoint api = APIClient.getClient().create(GetWeatherEndPoint.class);
 
-        Call<Weather> call = api.getWeather(title.toString(), unit, apiKey);
+
+        Call<Weather> call = api.getTodayWeather(title.toString(), unit, apiKey);
         call.enqueue(new Callback<Weather>() {
+
+
             @Override
             public void onResponse(Call<Weather> call, retrofit2.Response<Weather> response) {
+
                 String temp = Integer.toString((int) Math.round(response.body().getMain().getTemp()));
                 String city = response.body().getCity();
                 String weatherDescription = response.body().getWeatherInfo().get(0).getDescription();
                 String iconId = response.body().getWeatherInfo().get(0).getIconId();
+
 
                 tempProgressBar.setVisibility(GONE);
                 imgViewProgress.setVisibility(GONE);
@@ -117,15 +134,20 @@ public class TodayWeatherFragment extends Fragment {
                 weatherIcon.setVisibility(View.VISIBLE);
                 weatherDescriptionTextView.setText(weatherDescription);
                 Picasso.get().load("http://openweathermap.org/img/w/" + iconId + ".png").into(weatherIcon);
+
             }
 
             @Override
             public void onFailure(Call<Weather> call, Throwable t) {
+
+
                 tempProgressBar.setVisibility(View.VISIBLE);
                 imgViewProgress.setVisibility(View.VISIBLE);
                 temperatureTextView.setVisibility(GONE);
                 tempUnitView.setVisibility(GONE);
                 weatherIcon.setVisibility(GONE);
+
+
             }
         });
     }
@@ -136,6 +158,7 @@ public class TodayWeatherFragment extends Fragment {
 
         // Check which radio button was clicked
         switch (view.getId()) {
+
             case R.id.radioC:
                 if (checked)
                     this.unit = "metric";
@@ -143,8 +166,10 @@ public class TodayWeatherFragment extends Fragment {
 
                     getWeather(location);
                 }
-                unitText.setText(R.string.celciusUnitText);
+                tempUnitView.setText(R.string.celciusUnitText);
                 break;
+
+
             case R.id.radioF:
                 if (checked)
                     this.unit = "imperial";
@@ -152,8 +177,9 @@ public class TodayWeatherFragment extends Fragment {
 
                     getWeather(location);
                 }
-                unitText.setText(R.string.fahrenheitUnitText);
+                tempUnitView.setText(R.string.fahrenheitUnitText);
                 break;
+
         }
     }
 

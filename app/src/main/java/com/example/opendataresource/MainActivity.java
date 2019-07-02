@@ -38,10 +38,7 @@ import com.example.opendataresource.fragments.TodayWeatherFragment;
 import com.example.opendataresource.fragments.TomorrowWeatherFragment;
 import com.example.opendataresource.utils.InternetStatusListener;
 import com.example.opendataresource.utils.NDSpinner;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -52,7 +49,6 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
 import com.lapism.searchview.Search;
 import com.lapism.searchview.widget.SearchAdapter;
 import com.lapism.searchview.widget.SearchItem;
@@ -67,32 +63,83 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import butterknife.Optional;
+
+import static com.example.opendataresource.R.id.search_recyclerView;
+
 public class MainActivity extends AppCompatActivity implements TodayWeatherFragment.OnCompleteListener, InternetStatusListener.OnlineOrOffline {
-    private SearchView searchView;
+
+    @BindView(R.id.vSearch)
+    SearchView searchView;
+    @BindView(R.id.vPager)
+    ViewPager mViewPager;
+    @BindView(R.id.tabLayout)
+    TabLayout tabLayout;
+    @BindView(search_recyclerView)
+    RecyclerView recyclerView;
+    @BindView(R.id.drawer_layout)
+    DrawerLayout drawerLayout;
+    @BindView(R.id.vNavigation)
+    NavigationView navigationView;
+    @BindView(R.id.tvOfflineMode)
+    TextView offlineTextView;
+
     private String queryText;
-    private FirebaseDatabase database = FirebaseDatabase.getInstance();
-    private final DatabaseReference mGetReference = database.getReference();
-    private static List<SearchItem> mSuggestionsList = new ArrayList<>();
+    private static List<SearchItem> suggestionsList = new ArrayList<>();
     private static SearchAdapter searchViewAdapter;
-    private RecyclerView mRecyclerView;
+
+
     private TodayWeatherFragment todayWeatherFragment;
     private TomorrowWeatherFragment tomorrowWeatherFragment;
+
+
     private LocationManager locationManager;
-    private ActionBarDrawerToggle t;
+    private ActionBarDrawerToggle drawerToggle;
     private List<String> favourites = new ArrayList<>();
     private ArrayAdapter<String> favSpinnerAdapter;
-    private DrawerLayout drawerLayout;
-    private NavigationView navigationView;
+
+
     private FirebaseAuth user;
+    private FirebaseDatabase database = FirebaseDatabase.getInstance();
+    private final DatabaseReference dbReference = database.getReference();
     private FirebaseFirestore city = FirebaseFirestore.getInstance();
-    private View offlineTextView;
-    private Locale myLocale;
+
+
+    private Locale appLocale;
     final String[] language = {"PL", "EN"};
-    private int check = 0;
+    private int initialLangSpinnerCallCount = 0;
+    private int initialFavSpinnerCount = 0;
     private String currentCity;
-    private boolean first = true;
-    private InternetStatusListener inter;
+    private InternetStatusListener internetStatusListener;
     private Timer timer;
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        ButterKnife.bind(this);
+
+        user = user.getInstance();
+        internetStatusListener = new InternetStatusListener();
+        IntentFilter filter = new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE");
+        registerReceiver(internetStatusListener, filter);
+
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        drawerLayoutInit();
+        navViewInit(language);
+
+        setupViewPager(mViewPager);
+        tabLayout.setupWithViewPager(mViewPager);
+
+        geoLocationInit();
+        openCloseListenerInit();
+        searchView.setLogoIcon(R.drawable.ic_my_location_black_24dp);
+    }
 
 
     @Override
@@ -103,6 +150,7 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
         }
     }
 
+
     @Override
     public void onBackPressed() {
 
@@ -111,30 +159,6 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
         } else {
             finish();
         }
-
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        user = user.getInstance();
-        inter = new InternetStatusListener();
-        IntentFilter filter = new IntentFilter("android.net.conn.CONNECTIVITY_CHANGE");
-        registerReceiver(inter, filter);
-        offlineTextView = findViewById(R.id.offlineView);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-        searchView = findViewById(R.id.search);
-        searchView.setLogoIcon(R.drawable.ic_my_location_black_24dp);
-        drawerLayoutInit();
-        navViewInit(language);
-        ViewPager mViewPager = findViewById(R.id.container);
-        setupViewPager(mViewPager);
-        TabLayout tabLayout = findViewById(R.id.tabs);
-        tabLayout.setupWithViewPager(mViewPager);
-        openCloseListenerInit();
-        geoLocationInit();
-
 
     }
 
@@ -153,91 +177,197 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
         });
     }
 
+
     private void geoLocationInit() {
+
         locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
-        searchView.setOnLogoClickListener(new Search.OnLogoClickListener() {
-            @Override
-            public void onLogoClick() {
+        searchView.setOnLogoClickListener(() -> {
 
-                if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
-                    requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
 
 
-                } else if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            } else if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 
-                    Intent myIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                    startActivityForResult(myIntent, 1);
-                } else {
-                    Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                    if (location != null) {
-                        double latitude = location.getLatitude();
-                        double longitude = location.getLongitude();
-                        Geocoder gcd = new Geocoder(getApplicationContext(), Locale.getDefault());
-                        List<Address> addresses = null;
-                        try {
-                            addresses = gcd.getFromLocation(latitude, longitude, 1);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        if (addresses.size() > 0) {
-                            final String add = addresses.get(0).getLocality();
-                            todayWeatherFragment.getWeather(add);
-                            tomorrowWeatherFragment.getWeather(add);
-                            checkForDataUpdate();
-                            currentCity = add;
-                            if (!favourites.contains(add)) {
+                Intent myIntent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+                startActivityForResult(myIntent, 1);
 
-                                favourites.add(add);
-                                addCitytoFavouritesDatabase(add);
-                            }
-                            favSpinnerAdapter.notifyDataSetChanged();
-                        }
-                    }
+            } else {
 
-                    locationManager.requestSingleUpdate(
-                            LocationManager.GPS_PROVIDER,
+                Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
 
-                            new LocationListener() {
-                                @Override
-                                public void onLocationChanged(Location location) {
-                                }
+                if (location != null) {
 
-                                @Override
-                                public void onStatusChanged(String provider, int status, Bundle extras) {
-
-                                }
-
-                                @Override
-                                public void onProviderEnabled(String provider) {
-
-                                }
-
-                                @Override
-                                public void onProviderDisabled(String provider) {
-
-                                }
-                            }, null);
+                    decodeLocation(location);
 
                 }
+
+                locationManager.requestSingleUpdate(
+
+                        LocationManager.GPS_PROVIDER,
+
+                        getLocationListener(), null);
+
+            }
+
+        });
+    }
+
+    private LocationListener getLocationListener() {
+        return new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+            }
+
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+
+            }
+
+            @Override
+            public void onProviderEnabled(String provider) {
+
+            }
+
+            @Override
+            public void onProviderDisabled(String provider) {
+
+            }
+        };
+    }
+
+    private void decodeLocation(Location location) {
+
+
+        double latitude = location.getLatitude();
+        double longitude = location.getLongitude();
+        Geocoder gcd = new Geocoder(getApplicationContext(), Locale.getDefault());
+        List<Address> addresses = null;
+
+
+        try {
+            addresses = gcd.getFromLocation(latitude, longitude, 1);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+        if (addresses.size() > 0) {
+
+            final String cityDecoded = addresses.get(0).getLocality();
+            todayWeatherFragment.getWeather(cityDecoded);
+            tomorrowWeatherFragment.getWeather(cityDecoded);
+            addToSharedPref(cityDecoded,null);
+            updateSearchViewText(cityDecoded);
+            checkForDataUpdate();
+            currentCity = cityDecoded;
+
+
+            if (!favourites.contains(cityDecoded)) {
+
+                favourites.add(cityDecoded);
+                addCityToFavouritesDatabase(cityDecoded);
+
+            }
+            favSpinnerAdapter.notifyDataSetChanged();
+
+        }
+    }
+
+
+    private void updateSearchViewText(String cityDecoded) {
+        searchView.setQuery(cityDecoded, false);
+        searchView.clearFocus();
+        searchView.close();
+        recyclerView.setVisibility(View.GONE);
+        suggestionsList.clear();
+
+    }
+
+
+    private void navViewInit(final String[] language) {
+
+        langSpinnerInit(language);
+
+        favSpinnerInit();
+
+
+        navigationView.setNavigationItemSelectedListener(menuItem -> {
+
+            int id = menuItem.getItemId();
+            switch (id) {
+                case R.id.itemLanguage:
+
+                    break;
+                case R.id.itemFavourites:
+
+                    break;
+                case R.id.itemLogOut:
+                    FirebaseAuth.getInstance().signOut();
+                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                    startActivity(intent);
+                    MainActivity.this.finish();
+                    break;
+                default:
+                    return true;
+            }
+
+            return true;
+        });
+    }
+
+
+    private void favSpinnerInit() {
+        NDSpinner favSpinner = (NDSpinner) navigationView.getMenu().findItem(R.id.itemFavourites).getActionView();
+        favSpinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, favourites);
+        favSpinner.setAdapter(favSpinnerAdapter);
+        retrieveFavouritesFromDatabase();
+        favSpinnerAdapter.notifyDataSetChanged();
+        favSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+
+
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+
+                if (++initialFavSpinnerCount > 1) {
+                    String favouriteName = favourites.get(position);
+                    todayWeatherFragment.getWeather(favouriteName);
+                    tomorrowWeatherFragment.getWeather(favouriteName);
+                    checkForDataUpdate();
+                    currentCity = favouriteName;
+                    addToSharedPref(favouriteName, null);
+
+
+                    updateSearchViewText(favouriteName);
+
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
 
             }
         });
     }
 
-    private void navViewInit(final String[] language) {
-        navigationView = findViewById(R.id.nv);
-        final NDSpinner langSpinner = (NDSpinner) navigationView.getMenu().findItem(R.id.language).getActionView();
-        TextView username = navigationView.getHeaderView(0).findViewById(R.id.userNameDrawer);
+
+    private void langSpinnerInit(String[] language) {
+
+
+        final NDSpinner langSpinner = (NDSpinner) navigationView.getMenu().findItem(R.id.itemLanguage).getActionView();
+        TextView username = navigationView.getHeaderView(0).findViewById(R.id.tvHeaderUsername);
         username.setText(user.getCurrentUser().getEmail());
         final ArrayAdapter<String> langSpinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, language);
         langSpinner.setAdapter(langSpinnerAdapter);
         langSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+
+
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
 
-                if (++check > 1) {
+                if (++initialLangSpinnerCallCount > 1) {
                     Toast.makeText(MainActivity.this, language[position], Toast.LENGTH_SHORT).show();
 
                     if (language[position].equals("PL")) {
@@ -254,64 +384,15 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
             public void onNothingSelected(AdapterView<?> parent) {
             }
         });
-
-        NDSpinner favSpinner = (NDSpinner) navigationView.getMenu().findItem(R.id.favourites).getActionView();
-        favSpinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, favourites);
-        favSpinner.setAdapter(favSpinnerAdapter);
-        retrieveFavouritesFromDatabase();
-        favSpinnerAdapter.notifyDataSetChanged();
-        favSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                String favouriteName = favourites.get(position);
-                todayWeatherFragment.getWeather(favouriteName);
-                tomorrowWeatherFragment.getWeather(favouriteName);
-                checkForDataUpdate();
-                currentCity = favouriteName;
-                addToSharedPref(favouriteName, null);
-
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
-
-
-        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
-            @Override
-            public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
-
-                int id = menuItem.getItemId();
-                switch (id) {
-                    case R.id.language:
-
-                        break;
-                    case R.id.favourites:
-
-                        break;
-                    case R.id.logOutItem:
-                        FirebaseAuth.getInstance().signOut();
-                        Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-                        startActivity(intent);
-                        MainActivity.this.finish();
-                        break;
-                    default:
-                        return true;
-                }
-
-                return true;
-            }
-        });
     }
 
+
     private void drawerLayoutInit() {
-        drawerLayout = findViewById(R.id.drawer_layout);
-        t = new ActionBarDrawerToggle(this, drawerLayout, R.string.open, R.string.close);
-        t.setDrawerIndicatorEnabled(true);
-        drawerLayout.addDrawerListener(t);
-        t.syncState();
+
+        drawerToggle = new ActionBarDrawerToggle(this, drawerLayout, R.string.open, R.string.close);
+        drawerToggle.setDrawerIndicatorEnabled(true);
+        drawerLayout.addDrawerListener(drawerToggle);
+        drawerToggle.syncState();
         final ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
 
@@ -320,36 +401,42 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
         }
     }
 
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
 
-        if (t.onOptionsItemSelected(item))
+        if (drawerToggle.onOptionsItemSelected(item))
             return true;
 
         return super.onOptionsItemSelected(item);
     }
 
+
     private ValueEventListener valueEventListenerHandle() {
         return new ValueEventListener() {
+
+
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                mSuggestionsList.clear();
+
+                suggestionsList.clear();
                 for (DataSnapshot ds : dataSnapshot.getChildren()) {
+
 
                     SearchItem item = new SearchItem(getApplicationContext());
                     String name = (String) ds.child("name").getValue();
                     item.setTitle(name);
                     String country = (String) ds.child("country").getValue();
                     item.setSubtitle(country);
-                    mSuggestionsList.add(item);
+                    suggestionsList.add(item);
                 }
 
-                searchViewAdapter.setSuggestionsList(mSuggestionsList);
+
+                searchViewAdapter.setSuggestionsList(suggestionsList);
                 searchView.setAdapter(searchViewAdapter);
                 searchViewAdapter.getFilter().filter(queryText);
-                mRecyclerView.setVisibility(View.VISIBLE);
-
+                recyclerView.setVisibility(View.VISIBLE);
 
             }
 
@@ -363,113 +450,119 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
     }
 
 
-    private void setupViewPager(ViewPager mViewPager) {
+    private void setupViewPager(ViewPager viewPager) {
         SectionsPageAdapter adapter = new SectionsPageAdapter(getSupportFragmentManager());
         todayWeatherFragment = new TodayWeatherFragment();
         adapter.addFragment(todayWeatherFragment, getString(R.string.todayFragmentText));
         tomorrowWeatherFragment = new TomorrowWeatherFragment();
         adapter.addFragment(tomorrowWeatherFragment, getString(R.string.tomorrow));
-        mViewPager.setAdapter(adapter);
+        viewPager.setAdapter(adapter);
     }
 
 
     public void searchViewListenersInit() {
+
         searchView.setOnOpenCloseListener(null);
         searchViewAdapter = new SearchAdapter(getBaseContext());
-        searchViewAdapter.setSuggestionsList(mSuggestionsList);
-        searchViewAdapter.setOnSearchItemClickListener(new SearchAdapter.OnSearchItemClickListener() {
-            @Override
-            public void onSearchItemClick(int position, CharSequence title, CharSequence subtitle) {
-                todayWeatherFragment.getWeather(title);
+        searchViewAdapter.setSuggestionsList(suggestionsList);
+        searchViewAdapter.setOnSearchItemClickListener((position, title, subtitle) -> {
 
-                if (!favourites.contains(title.toString())) {
 
-                    favourites.add(title.toString());
-                    addCitytoFavouritesDatabase(title);
-                    favSpinnerAdapter.notifyDataSetChanged();
-                }
-                tomorrowWeatherFragment.getWeather(title);
-                checkForDataUpdate();
-                currentCity = title.toString();
-                searchView.close();
+            todayWeatherFragment.getWeather(title);
+            tomorrowWeatherFragment.getWeather(title);
+            if (!favourites.contains(title.toString())) {
+
+                favourites.add(title.toString());
+                addCityToFavouritesDatabase(title);
+                favSpinnerAdapter.notifyDataSetChanged();
+
             }
+
+            tomorrowWeatherFragment.getWeather(title);
+            checkForDataUpdate();
+            currentCity = title.toString();
+            addToSharedPref(currentCity, null);
+            updateSearchViewText(currentCity);
+
+
         });
 
         searchView.setAdapter(searchViewAdapter);
+        updateSearchViewText(currentCity);
+        searchViewAdapter.notifyDataSetChanged();
 
 
         searchView.setOnQueryTextListener(new Search.OnQueryTextListener() {
+
             @Override
             public boolean onQueryTextSubmit(CharSequence query) {
+
                 return false;
             }
 
             @Override
             public void onQueryTextChange(CharSequence newText) {
-
-                queryText = newText.toString();
-                Query mGetQuery = mGetReference.orderByChild("name").startAt(queryText).limitToFirst(5);
-                mGetQuery.addListenerForSingleValueEvent(valueEventListenerHandle());
-
-
+                suggestionsList.clear();
+                if (!newText.toString().equals(getSharedPref(getString(R.string.saved_high_score_key)).toString())) {
+                    queryText = newText.toString();
+                    Query mGetQuery = dbReference.orderByChild("name").startAt(queryText).limitToFirst(5);
+                    mGetQuery.addListenerForSingleValueEvent(valueEventListenerHandle());
+                }
             }
         });
 
 
     }
 
-    private void addCitytoFavouritesDatabase(CharSequence title) {
-        Map<String, Object> cityy = new HashMap<>();
-        cityy.put("city", title.toString());
-        cityy.put("user", user.getUid());
-        city.collection("cities").add(cityy).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+    private void addCityToFavouritesDatabase(CharSequence title) {
+        Map<String, Object> favCityMap = new HashMap<>();
+        favCityMap.put("city", title.toString());
+        favCityMap.put("user", user.getUid());
+        city.collection("cities").add(favCityMap).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+
+
             @Override
             public void onSuccess(DocumentReference documentReference) {
 
 
             }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
+        }).addOnFailureListener(e -> {
 
-            }
         });
     }
+
 
     private void retrieveFavouritesFromDatabase() {
         city.collection("cities")
                 .whereEqualTo("user", user.getUid()).get()
-                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-                    @Override
-                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                        if (task.isSuccessful()) {
-                            for (QueryDocumentSnapshot document : task.getResult()) {
-                                favourites.add(document.getData().get("city").toString());
-                                favSpinnerAdapter.notifyDataSetChanged();
+                .addOnCompleteListener(task -> {
+                    if (task.isSuccessful()) {
+                        for (QueryDocumentSnapshot document : task.getResult()) {
+                            favourites.add(document.getData().get("city").toString());
+                            favSpinnerAdapter.notifyDataSetChanged();
 
-                            }
                         }
                     }
                 });
     }
 
+
     @Override
     public void onComplete() {
-        mRecyclerView = findViewById(R.id.search_recyclerView);
+
         CharSequence location = getSharedPref(getString(R.string.saved_high_score_key));
 
         if (location != null) {
 
             currentCity = location.toString();
 
-
-            searchView.setText(location);
+            updateSearchViewText(currentCity);
 
         }
 
     }
 
-    private CharSequence getSharedPref(String key) {
+    public CharSequence getSharedPref(String key) {
         SharedPreferences sharedPref = getPreferences(Context.MODE_PRIVATE);
         return sharedPref.getString(key, null);
     }
@@ -478,8 +571,10 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
     @Override
     public void onOnline() {
         offlineTextView.setVisibility(View.GONE);
-        todayWeatherFragment.getWeather(currentCity);
-        tomorrowWeatherFragment.getWeather(currentCity);
+        if (currentCity != null) {
+            todayWeatherFragment.getWeather(currentCity);
+            tomorrowWeatherFragment.getWeather(currentCity);
+        }
     }
 
     @Override
@@ -492,23 +587,25 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(inter);
+        unregisterReceiver(internetStatusListener);
     }
 
     public void setLocale(String lang) {
         addToSharedPref(null, lang);
-        myLocale = new Locale(lang);
+        appLocale = new Locale(lang);
         Resources res = getResources();
-        DisplayMetrics dm = res.getDisplayMetrics();
+        DisplayMetrics displayMetrics = res.getDisplayMetrics();
         Configuration conf = res.getConfiguration();
-        conf.setLocale(myLocale);
-        res.updateConfiguration(conf, dm);
+        conf.setLocale(appLocale);
+        res.updateConfiguration(conf, displayMetrics);
         Intent refresh = new Intent(this, MainActivity.class);
         startActivity(refresh);
         finish();
     }
 
 
+    @Optional
+    @OnClick({R.id.radioC, R.id.radioF})
     public void onRadioButtonClicked(View view) {
 
 
@@ -532,6 +629,7 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
         }
     }
 
+
     private void checkForDataUpdate() {
         if (timer != null) {
             timer = new Timer();
@@ -546,5 +644,6 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
 
         }
     }
+
 
 }

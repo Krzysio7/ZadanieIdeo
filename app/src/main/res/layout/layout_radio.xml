@@ -10,8 +10,7 @@
         android:layout_weight="1"
         android:checked="true"
         android:onClick="onRadioButtonClicked"
-        android:text="@string/celciusUnitText"
-        />
+        android:text="@string/celciusUnitText" />
 
     <RadioButton
         android:id="@+id/radioF"

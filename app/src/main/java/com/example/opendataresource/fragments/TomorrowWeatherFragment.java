@@ -14,39 +14,51 @@ import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.TextView;
 
-import com.android.volley.toolbox.JsonObjectRequest;
 import com.example.opendataresource.BuildConfig;
 import com.example.opendataresource.R;
 import com.example.opendataresource.model.TomorrowWeather;
 import com.example.opendataresource.rest.APIClient;
-import com.example.opendataresource.rest.GetTomorrowWeatherEndPoint;
+import com.example.opendataresource.rest.GetWeatherEndPoint;
 import com.squareup.picasso.Picasso;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import retrofit2.Call;
 import retrofit2.Callback;
 
 import static android.view.View.GONE;
 
 public class TomorrowWeatherFragment extends Fragment {
-    public TextView temperatureTextView;
 
-    public JsonObjectRequest jsonObjectRequest;
-    private TextView cityTextView;
-    private TextView weatherDescriptionTextView;
-    private ImageView weatherIcon;
-    private ProgressBar tempProgressBar;
-    private TextView tempUnitView;
+
+    @BindView(R.id.tvTemperature)
+    TextView temperatureTextView;
+    @BindView(R.id.tvCity)
+    TextView cityTextView;
+    @BindView(R.id.tvWeatherDesc)
+    TextView weatherDescriptionTextView;
+    @BindView(R.id.ivWeatherStatusIcon)
+    ImageView weatherIcon;
+    @BindView(R.id.pbTemperature)
+    ProgressBar tempProgressBar;
+    @BindView(R.id.tvMeasureUnit)
+    TextView tempUnitView;
+    @BindView(R.id.pbWeatherStatusIcon)
+    ProgressBar imgViewProgress;
+
     public String unit;
     private CharSequence location;
-    private TextView unitText;
     String apiKey = BuildConfig.ApiKey;
-    private ProgressBar imgViewProgress;
 
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.tomorrow_weather_layout, container, false);
+
+        View view = inflater.inflate(R.layout.weather_layout, container, false);
+        ButterKnife.bind(this, view);
+
+        return view;
     }
 
 
@@ -61,18 +73,11 @@ public class TomorrowWeatherFragment extends Fragment {
             editor.apply();
 
         }
-        temperatureTextView = getActivity().findViewById(R.id.temperatureView2);
-        cityTextView = getActivity().findViewById(R.id.cityView2);
-        weatherDescriptionTextView = getActivity().findViewById(R.id.weatherDescriptionView2);
-        weatherIcon = getActivity().findViewById(R.id.weatherIconView2);
-        tempProgressBar = getActivity().findViewById(R.id.temperatureProgressBar2);
-        tempUnitView = getActivity().findViewById(R.id.measureUnitView2);
-        imgViewProgress = getActivity().findViewById(R.id.imageViewProgress2);
 
 
-        GetTomorrowWeatherEndPoint api = APIClient.getClient().create(GetTomorrowWeatherEndPoint.class);
+        GetWeatherEndPoint api = APIClient.getClient().create(GetWeatherEndPoint.class);
 
-        Call<TomorrowWeather> call = api.getWeather(title.toString(), unit, apiKey);
+        Call<TomorrowWeather> call = api.getTomorrowWeather(title.toString(), unit, apiKey);
 
         call.enqueue(new Callback<TomorrowWeather>() {
             @Override

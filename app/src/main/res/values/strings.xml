@@ -5,7 +5,6 @@
     <string name="action_search">search</string>
     <string name="saved_high_score_key">location</string>
     <string name="lang_key" tools:ignore="MissingTranslation">language</string>
-
     <string name="open">Open</string>
     <string name="close">Close</string>
     <string name="username">Username</string>
@@ -24,5 +23,6 @@
     <string name="tomorrow">Tomorrow</string>
     <string name="emailErrorText">You must enter an valid email</string>
     <string name="sthWrongText">Sorry,something went wrong</string>
-    <string name="emptyFIeldError">empty field</string>
+    <string name="emptyFieldError">empty field</string>
+    <string name="textCity">City</string>
 </resources>
