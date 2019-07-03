@@ -77,14 +77,4 @@ public class TomorrowWeatherFragment extends WeatherBaseFragment {
         return view;
     }
 
-    @Override
-    public void getTomorrowWeather(CharSequence title) {
-        super.getTomorrowWeather(title);
-    }
-
-    @Override
-    public void onClickRadio(View view) {
-        super.onClickRadio(view);
-    }
-
 }

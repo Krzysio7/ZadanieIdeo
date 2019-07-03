@@ -77,9 +77,4 @@ public class TodayWeatherFragment extends WeatherBaseFragment {
         return view;
     }
 
-    @Override
-    public void getTodayWeather(CharSequence title) {
-        super.getTodayWeather(title);
-    }
-
 }
