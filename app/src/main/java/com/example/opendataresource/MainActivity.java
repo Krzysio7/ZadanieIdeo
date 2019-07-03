@@ -91,22 +91,18 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
     private static List<SearchItem> suggestionsList = new ArrayList<>();
     private static SearchAdapter searchViewAdapter;
 
-
     private TodayWeatherFragment todayWeatherFragment;
     private TomorrowWeatherFragment tomorrowWeatherFragment;
-
 
     private LocationManager locationManager;
     private ActionBarDrawerToggle drawerToggle;
     private List<String> favourites = new ArrayList<>();
     private ArrayAdapter<String> favSpinnerAdapter;
 
-
     private FirebaseAuth user;
     private FirebaseDatabase database = FirebaseDatabase.getInstance();
     private final DatabaseReference dbReference = database.getReference();
     private FirebaseFirestore city = FirebaseFirestore.getInstance();
-
 
     private Locale appLocale;
     final String[] language = {"PL", "EN"};
@@ -141,7 +137,6 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
         searchView.setLogoIcon(R.drawable.ic_my_location_black_24dp);
     }
 
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -149,7 +144,6 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
             super.onResume();
         }
     }
-
 
     @Override
     public void onBackPressed() {
@@ -161,7 +155,6 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
         }
 
     }
-
 
     private void openCloseListenerInit() {
         searchView.setOnOpenCloseListener(new Search.OnOpenCloseListener() {
@@ -176,7 +169,6 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
             }
         });
     }
-
 
     private void geoLocationInit() {
 
@@ -201,7 +193,6 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
                 if (location != null) {
 
                     decodeLocation(location);
-
                 }
 
                 locationManager.requestSingleUpdate(
@@ -209,7 +200,6 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
                         LocationManager.GPS_PROVIDER,
 
                         getLocationListener(), null);
-
             }
 
         });
@@ -240,12 +230,10 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
 
     private void decodeLocation(Location location) {
 
-
         double latitude = location.getLatitude();
         double longitude = location.getLongitude();
         Geocoder gcd = new Geocoder(getApplicationContext(), Locale.getDefault());
         List<Address> addresses = null;
-
 
         try {
             addresses = gcd.getFromLocation(latitude, longitude, 1);
@@ -253,17 +241,15 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
             e.printStackTrace();
         }
 
-
         if (addresses.size() > 0) {
 
             final String cityDecoded = addresses.get(0).getLocality();
-            todayWeatherFragment.getWeather(cityDecoded);
-            tomorrowWeatherFragment.getWeather(cityDecoded);
-            addToSharedPref(cityDecoded,null);
+            todayWeatherFragment.getTodayWeather(cityDecoded);
+            tomorrowWeatherFragment.getTomorrowWeather(cityDecoded);
+            addToSharedPref(cityDecoded, null);
             updateSearchViewText(cityDecoded);
             checkForDataUpdate();
             currentCity = cityDecoded;
-
 
             if (!favourites.contains(cityDecoded)) {
 
@@ -272,10 +258,8 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
 
             }
             favSpinnerAdapter.notifyDataSetChanged();
-
         }
     }
-
 
     private void updateSearchViewText(String cityDecoded) {
         searchView.setQuery(cityDecoded, false);
@@ -285,7 +269,6 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
         suggestionsList.clear();
 
     }
-
 
     private void navViewInit(final String[] language) {
 
@@ -318,7 +301,6 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
         });
     }
 
-
     private void favSpinnerInit() {
         NDSpinner favSpinner = (NDSpinner) navigationView.getMenu().findItem(R.id.itemFavourites).getActionView();
         favSpinnerAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, favourites);
@@ -327,18 +309,16 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
         favSpinnerAdapter.notifyDataSetChanged();
         favSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 
-
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
 
                 if (++initialFavSpinnerCount > 1) {
                     String favouriteName = favourites.get(position);
-                    todayWeatherFragment.getWeather(favouriteName);
-                    tomorrowWeatherFragment.getWeather(favouriteName);
+                    todayWeatherFragment.getTodayWeather(favouriteName);
+                    tomorrowWeatherFragment.getTomorrowWeather(favouriteName);
                     checkForDataUpdate();
                     currentCity = favouriteName;
                     addToSharedPref(favouriteName, null);
-
 
                     updateSearchViewText(favouriteName);
 
@@ -352,9 +332,7 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
         });
     }
 
-
     private void langSpinnerInit(String[] language) {
-
 
         final NDSpinner langSpinner = (NDSpinner) navigationView.getMenu().findItem(R.id.itemLanguage).getActionView();
         TextView username = navigationView.getHeaderView(0).findViewById(R.id.tvHeaderUsername);
@@ -386,7 +364,6 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
         });
     }
 
-
     private void drawerLayoutInit() {
 
         drawerToggle = new ActionBarDrawerToggle(this, drawerLayout, R.string.open, R.string.close);
@@ -401,28 +378,24 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
         }
     }
 
-
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
-
-        if (drawerToggle.onOptionsItemSelected(item))
+        if (drawerToggle.onOptionsItemSelected(item)) {
             return true;
+        }
 
         return super.onOptionsItemSelected(item);
     }
 
-
     private ValueEventListener valueEventListenerHandle() {
         return new ValueEventListener() {
-
 
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
 
                 suggestionsList.clear();
                 for (DataSnapshot ds : dataSnapshot.getChildren()) {
-
 
                     SearchItem item = new SearchItem(getApplicationContext());
                     String name = (String) ds.child("name").getValue();
@@ -431,7 +404,6 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
                     item.setSubtitle(country);
                     suggestionsList.add(item);
                 }
-
 
                 searchViewAdapter.setSuggestionsList(suggestionsList);
                 searchView.setAdapter(searchViewAdapter);
@@ -445,10 +417,7 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
 
             }
         };
-
-
     }
-
 
     private void setupViewPager(ViewPager viewPager) {
         SectionsPageAdapter adapter = new SectionsPageAdapter(getSupportFragmentManager());
@@ -468,8 +437,8 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
         searchViewAdapter.setOnSearchItemClickListener((position, title, subtitle) -> {
 
 
-            todayWeatherFragment.getWeather(title);
-            tomorrowWeatherFragment.getWeather(title);
+            todayWeatherFragment.getTodayWeather(title);
+            tomorrowWeatherFragment.getTomorrowWeather(title);
             if (!favourites.contains(title.toString())) {
 
                 favourites.add(title.toString());
@@ -478,12 +447,11 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
 
             }
 
-            tomorrowWeatherFragment.getWeather(title);
+            tomorrowWeatherFragment.getTomorrowWeather(title);
             checkForDataUpdate();
             currentCity = title.toString();
             addToSharedPref(currentCity, null);
             updateSearchViewText(currentCity);
-
 
         });
 
@@ -503,7 +471,10 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
             @Override
             public void onQueryTextChange(CharSequence newText) {
                 suggestionsList.clear();
-                if (!newText.toString().equals(getSharedPref(getString(R.string.saved_high_score_key)).toString())) {
+
+                if (getSharedPref(getString(R.string.saved_high_score_key)) == null ||
+                        !newText.toString().equals(getSharedPref(getString(R.string.saved_high_score_key)).toString())) {
+
                     queryText = newText.toString();
                     Query mGetQuery = dbReference.orderByChild("name").startAt(queryText).limitToFirst(5);
                     mGetQuery.addListenerForSingleValueEvent(valueEventListenerHandle());
@@ -531,7 +502,6 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
         });
     }
 
-
     private void retrieveFavouritesFromDatabase() {
         city.collection("cities")
                 .whereEqualTo("user", user.getUid()).get()
@@ -546,7 +516,6 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
                 });
     }
 
-
     @Override
     public void onComplete() {
 
@@ -557,7 +526,6 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
             currentCity = location.toString();
 
             updateSearchViewText(currentCity);
-
         }
 
     }
@@ -567,13 +535,12 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
         return sharedPref.getString(key, null);
     }
 
-
     @Override
     public void onOnline() {
         offlineTextView.setVisibility(View.GONE);
         if (currentCity != null) {
-            todayWeatherFragment.getWeather(currentCity);
-            tomorrowWeatherFragment.getWeather(currentCity);
+            todayWeatherFragment.getTodayWeather(currentCity);
+            tomorrowWeatherFragment.getTomorrowWeather(currentCity);
         }
     }
 
@@ -582,7 +549,6 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
         offlineTextView.setVisibility(View.VISIBLE);
 
     }
-
 
     @Override
     protected void onDestroy() {
@@ -603,16 +569,13 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
         finish();
     }
 
-
     @Optional
     @OnClick({R.id.radioC, R.id.radioF})
     public void onRadioButtonClicked(View view) {
 
-
         tomorrowWeatherFragment.onClickRadio(view);
         todayWeatherFragment.onClickRadio(view);
     }
-
 
     public void addToSharedPref(CharSequence location, String lang) {
         if (location != null) {
@@ -625,10 +588,8 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
             SharedPreferences.Editor editor = sharedPref.edit();
             editor.putString(getString(R.string.lang_key), lang);
             editor.apply();
-
         }
     }
-
 
     private void checkForDataUpdate() {
         if (timer != null) {
@@ -636,14 +597,14 @@ public class MainActivity extends AppCompatActivity implements TodayWeatherFragm
             TimerTask task = new TimerTask() {
                 @Override
                 public void run() {
-                    todayWeatherFragment.getWeather(getSharedPref(getString(R.string.saved_high_score_key)));
-                    tomorrowWeatherFragment.getWeather(getSharedPref(getString(R.string.saved_high_score_key)));
+                    todayWeatherFragment.getTodayWeather(getSharedPref(getString(R.string.saved_high_score_key)));
+                    tomorrowWeatherFragment.getTomorrowWeather(getSharedPref(getString(R.string.saved_high_score_key)));
                 }
             };
+
             timer.schedule(task, 0, 60000);
 
         }
     }
-
 
 }
