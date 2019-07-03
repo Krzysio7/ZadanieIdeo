@@ -47,8 +47,6 @@ public abstract class WeatherBaseFragment extends Fragment {
 
     public abstract void getWeather();
 
-    public abstract String unit();
-
 
     private CharSequence location;
     String apiKey = BuildConfig.ApiKey;
@@ -174,7 +172,6 @@ public abstract class WeatherBaseFragment extends Fragment {
             public void onFailure(Call<TomorrowWeather> call, Throwable t) {
 
                 hideWeatherInfo();
-
             }
         });
 

@@ -28,7 +28,6 @@ public class TomorrowWeatherFragment extends WeatherBaseFragment {
     TextView tempUnitView;
     @BindView(R.id.pbWeatherStatusIcon)
     ProgressBar imgViewProgress;
-    String unit = "metric";
 
     @Override
     public TextView temperatureTextView() {
@@ -65,10 +64,6 @@ public class TomorrowWeatherFragment extends WeatherBaseFragment {
         return imgViewProgress;
     }
 
-    @Override
-    public String unit() {
-        return unit;
-    }
 
     @Override
     public void getWeather() {

@@ -29,10 +29,6 @@ public class TodayWeatherFragment extends WeatherBaseFragment {
     @BindView(R.id.pbWeatherStatusIcon)
     ProgressBar imgViewProgress;
 
-
-    public String unit = "metric";
-
-
     @Override
     public TextView temperatureTextView() {
         return temperatureTextView;
@@ -74,11 +70,6 @@ public class TodayWeatherFragment extends WeatherBaseFragment {
     }
 
     @Override
-    public String unit() {
-        return unit;
-    }
-
-    @Override
     public View provideYourFragmentView(LayoutInflater inflater, ViewGroup parent, Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.weather_layout, parent, false);
@@ -90,6 +81,5 @@ public class TodayWeatherFragment extends WeatherBaseFragment {
     public void getTodayWeather(CharSequence title) {
         super.getTodayWeather(title);
     }
-
 
 }
